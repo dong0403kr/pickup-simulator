@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>픽업 뽑기 시뮬레이터</title>
+    <style>
+        @font-face {
+            font-family: 'GyeonggiMillenniumTitle';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Light.woff') format('woff');
+            font-weight: 300;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Gyeonggi_Title_Medium';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2410-3@1.0/Title_Medium.woff') format('woff');
+            font-weight: 300;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'GyeonggiMillenniumTitle';
+            background-color: #2c2f33;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #40444b;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+
+        h1, h3 {
+            color: #7289da;
+        }
+
+        #maintitle {
+            padding-bottom: 3%;
+            font-family: "Gyeonggi_Title_Medium";
+            border-bottom: 1px solid #545861;
+        }
+        
+        .pickup-main {
+            font-size: 2em;
+            font-weight: bold;
+            color: yellow;
+            text-shadow: 
+                -1.5px -1.5px 0 #ff0000, 1.5px -1.5px 0 #ff0000,
+                -1.5px 1.5px 0 #ff0000, 1.5px 1.5px 0 #ff0000,
+                0 0 10px yellow;
+        }
+
+        .controls, .status, .statistics {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #36393f;
+            border-radius: 8px;
+        }
+        
+        .status h3, .statistics h3 {
+            margin-top: 0;
+            color: #99aab5;
+            border-bottom: 1px solid #545861;
+            padding-bottom: 10px;
+        }
+
+        button {
+            font-family: 'GyeonggiMillenniumTitle';
+            background-color: #7289da;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: background-color 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #677bc4;
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .reset-button {
+            background-color: #99aab5;
+            color: #2c2f33;
+        }
+
+        .reset-button:hover {
+            background-color: #8a9aaf;
+        }
+        
+        #current-results {
+            margin-bottom: 20px;
+            padding: 15px;
+            min-height: 50px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            background-color: #2c2f33;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        #history {
+            margin-top: 10px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #545861;
+            background-color: #36393f;
+            border-radius: 8px;
+            text-align: left;
+            /*display: flex;
+            flex-direction: column-reverse; 최신 결과가 위로 오도록 */
+        }
+        
+        #history p {
+            margin: 4px 0;
+            padding-left: 10px;
+            font-size: 0.95em;
+        }
+        
+        .status-grid, .stats-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+             gap: 10px;
+             text-align: center;
+        }
+        
+        .status-grid div, .stats-grid div {
+            background-color: #40444b;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .label {
+            font-size: 0.9em;
+            color: #99aab5;
+        }
+        
+        .value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        /* 텍스트 효과 */
+        .common { color: #b0b8c4; }
+        .pickup {
+            font-weight: bold;
+            color: yellow;
+            text-shadow: 
+                -1px -1px 0 #ff0000, 1px -1px 0 #ff0000,
+                -1px 1px 0 #ff0000, 1px 1px 0 #ff0000,
+                0 0 8px yellow;
+        }
+        .special {
+            font-weight: bold;
+            color: yellow;
+            text-shadow: 
+                -1px -1px 0 #ff0000, 1px -1px 0 #ff0000,
+                -1px 1px 0 #ff0000, 1px 1px 0 #ff0000;
+        }
+        .legendary {
+            font-weight: bold;
+            color: yellow;
+             text-shadow: 
+                -1px -1px 0 #000, 1px -1px 0 #000,
+                -1px 1px 0 #000, 1px 1px 0 #000;
+        }
+        .pickup-settings {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #pickup-name-input {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #545861;
+            background-color: #2c2f33;
+            color: white;
+            font-size: 14px;
+        }
+
+        .flash {
+            /* 0.3초 동안 flash-effect 애니메이션을 실행합니다 */
+            animation: flash-effect 0.3s ease;
+        }
+
+        @keyframes flash-effect {
+            /* 애니메이션 중간(50%)에 배경을 밝게하고 그림자 효과를 줍니다 */
+            50% {
+                background-color: #5c6168;
+                box-shadow: 0 0 15px #7289da;
+            }
+        }
+        .auto-draw-controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #target-display {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #f1c40f;
+            width: 80px; /* 좌우 버튼 클릭 시 흔들림 방지 */
+        }
+        .stop-button {
+            background-color: #d9534f; /* 붉은 계열 색상 */
+        }
+        .stop-button:hover {
+            background-color: #c9302c;
+        }
+
+        .history-container {
+            position: relative; /* 자식 요소(버튼)를 배치하는 기준이 됩니다 */
+        }
+
+        .history-nav {
+            position: absolute;
+            left: -20px; /* 뽑기 내역 왼쪽에 배치 */
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-nav button {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+        
+        /* 스크롤로 이동한 항목을 강조하는 스타일 */
+        #history p.highlight {
+            background-color: rgba(114, 137, 218, 0.5);
+            border-radius: 4px;
+        }
+
+        .updated {
+            animation: update-effect 0.25s ease-out;
+        }
+
+        @keyframes update-effect {
+            50% {
+                color: #8fa4f7; /* 기존보다 더 밝은 색으로 변경 */
+                text-shadow: 0 0 10px #7289da; /* 주변에 네온사인 같은 빛나는 효과 추가 */
+            }
+        }
+
+        #total-rubies{
+            margin-top: 10px;
+        }
+
+        /* =================================== */
+        /* [추가] 모바일 반응형 스타일 (700px 이하) */
+        /* =================================== */
+        @media (max-width: 700px) {
+            body {
+                padding: 10px; /* 전체 여백 줄이기 */
+                align-items: flex-start; /* 화면 상단에 내용 배치 */
+            }
+
+            .container {
+                padding: 15px; /* 컨테이너 내부 여백 줄이기 */
+            }
+            
+            h1 { font-size: 1.8em; }
+            .pickup-main { font-size: 1.6em; }
+            
+            /* 버튼과 입력 필드들이 너무 커지지 않도록 조정 */
+            .controls, .auto-draw-controls {
+                flex-wrap: wrap; /* 버튼들이 한 줄에 다 안들어가면 다음 줄로 넘김 */
+            }
+
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            #pickup-name-input { width: 100%; box-sizing: border-box; text-align: center; }
+            .pickup-settings { flex-wrap: wrap; }
+
+            /* [핵심] 뽑기 내역 네비게이션 버튼 위치 조정 */
+            .history-container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .history-nav {
+                position: static; /* 절대 위치 해제 */
+                transform: none; /* 위치 변환 초기화 */
+                order: 1; /* 뽑기 내역(history)보다 뒤에 오도록 순서 변경 */
+                flex-direction: row; /* 버튼 가로로 정렬 */
+                justify-content: center;
+                margin-top: 10px;
+                left: auto; /* 기존 값 초기화 */
+            }
+
+            /* [추가] 통계 부분을 항상 3컬럼으로 유지 */
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr); /* 3개의 동일한 너비 컬럼으로 강제 지정 */
+            }
+
+            /* [추가] 좁은 공간에 맞게 폰트 크기 미세 조정 */
+            .stats-grid .value {
+                font-size: 1.3em; 
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1 id="maintitle">픽업 뽑기 시뮬레이터</h1>
+        <div class="pickup-settings">
+            <input type="text" id="pickup-name-input" placeholder="픽업 캐릭터 이름 입력">
+            <button id="set-name-btn">픽업캐 이름 설정</button>
+        </div>
+        <p><span id="pickup-main-display" class="pickup-main">픽업캐</span></p>
+
+        <div class="status">
+            <h3>현재 상태</h3>
+            <div class="status-grid">
+                <div>
+                    <span class="label">천장 스택</span>
+                    <div id="pity-stack" class="value">0</div>
+                </div>
+                <div>
+                    <span class="label">뽑기 상태</span>
+                    <div id="pity-status" class="value" style="font-size: 1.2em;">기본</div>
+                </div>
+            </div>
+        </div>
+        
+        <h3>최근 뽑기 결과</h3>
+        <div id="current-results"></div>
+
+        <div class="controls">
+            <button id="draw-1">1회 뽑기</button>
+            <button id="draw-10">10회 뽑기</button>
+            <button id="reset-btn" class="reset-button">초기화</button>
+        </div>
+        <div class="auto-draw-controls">
+            <button id="prev-target-btn">◀</button>
+            <span id="target-display">명함</span>
+            <button id="next-target-btn">▶</button>
+            <button id="auto-draw-btn">될 때 까지 자동 뽑기</button>
+        </div>
+
+        <div class="statistics">
+            <h3>뽑기 통계</h3>
+            <div class="stats-grid">
+                 <div>
+                    <span class="label">픽업 획득</span>
+                    <div id="pickup-count" class="value">0</div>
+                </div>
+                <div>
+                    <span class="label">찐스 획득</span>
+                    <div id="special-count" class="value">0</div>
+                </div>
+                 <div>
+                    <span class="label">짭스 획득</span>
+                    <div id="legendary-count" class="value">0</div>
+                </div>
+            </div>
+             <div style="margin-top: 15px; background-color: #40444b; padding: 10px; border-radius: 5px;">
+                <span class="label">총 사용 루비</span>
+                <div id="total-rubies" class="value">0</div>
+                <div id="ruby-stats" style="font-size: 0.9em; margin-top: 5px; color: #99aab5;">-</div>
+            </div>
+        </div>
+        
+        <h3>뽑기 내역</h3>
+        <div class="history-container">
+            <div class="history-nav">
+                <button id="nav-up-btn">▲</button>
+                <button id="nav-down-btn">▼</button>
+            </div>
+            <div id="history"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 상태 변수 ---
+        let pityStack = 0;
+        let isGuaranteedPickup = false;
+        
+        // --- 통계 변수 ---
+        let totalRubies = 0;
+        let pickupCount = 0;
+        let specialCount = 0;
+        let legendaryCount = 0;
+
+        // --- 자동 뽑기 변수 ---
+        let targetLevel = 0; // 0: 명함, 1: 1초, ..., 6: 6초
+        let isAutoDrawing = false;
+        let autoDrawInterval = null;
+        const TARGET_LABELS = ["명함", "1초", "2초", "3초", "4초", "5초", "6초"];
+
+        // --- 전설 내역 네비게이션 변수 ---
+        let currentLegendaryIndex = -1;
+
+        // --- 캐릭터 이름 정의 ---
+        let PICKUP_CHAR = "픽업캐";
+        const SPECIAL_LEGENDARY = ["찐스"];
+        const NORMAL_LEGENDARY = ["짭스"];
+
+        // --- DOM 요소 ---
+        const draw1Btn = document.getElementById('draw-1');
+        const draw10Btn = document.getElementById('draw-10');
+        const resetBtn = document.getElementById('reset-btn');
+        const currentResultsDiv = document.getElementById('current-results');
+        const historyDiv = document.getElementById('history');
+        
+        const pityStackEl = document.getElementById('pity-stack');
+        const pityStatusEl = document.getElementById('pity-status');
+        
+        const pickupCountEl = document.getElementById('pickup-count');
+        const specialCountEl = document.getElementById('special-count');
+        const legendaryCountEl = document.getElementById('legendary-count');
+        const totalRubiesEl = document.getElementById('total-rubies');
+        const rubyStatsEl = document.getElementById('ruby-stats');
+
+        const pickupNameInput = document.getElementById('pickup-name-input');
+        const setNameBtn = document.getElementById('set-name-btn');
+        const pickupMainDisplay = document.getElementById('pickup-main-display');
+
+        const prevTargetBtn = document.getElementById('prev-target-btn');
+        const nextTargetBtn = document.getElementById('next-target-btn');
+        const targetDisplay = document.getElementById('target-display');
+        const autoDrawBtn = document.getElementById('auto-draw-btn');
+
+        const navUpBtn = document.getElementById('nav-up-btn');
+        const navDownBtn = document.getElementById('nav-down-btn');
+        
+        // --- 이벤트 리스너 ---
+        draw1Btn.addEventListener('click', () => performDraw(1));
+        draw10Btn.addEventListener('click', () => performDraw(10));
+        resetBtn.addEventListener('click', resetSimulator);
+        setNameBtn.addEventListener('click', setPickupName);
+        prevTargetBtn.addEventListener('click', changeTarget);
+        nextTargetBtn.addEventListener('click', changeTarget);
+        autoDrawBtn.addEventListener('click', toggleAutoDraw);
+        navUpBtn.addEventListener('click', () => navigateLegendary('prev'));
+        navDownBtn.addEventListener('click', () => navigateLegendary('next'));
+
+        /**
+         * 지정된 횟수만큼 뽑기를 수행하는 함수
+         * @param {number} times 뽑을 횟수 (1 또는 10)
+         */
+        function performDraw(times) {
+            // [수정] 애니메이션을 강제로 다시 시작하는 부분
+            // 1. 먼저 클래스를 제거하고
+            currentResultsDiv.classList.remove('flash');
+            // 2. 브라우저가 변경을 인지하도록 강제 리플로우(reflow)를 실행한 뒤
+            void currentResultsDiv.offsetWidth;
+            // 3. 다시 클래스를 추가하여 애니메이션을 처음부터 재생합니다.
+            currentResultsDiv.classList.add('flash');
+
+            let currentPullResults = [];
+            for (let i = 0; i < times; i++) {
+                pityStack++;
+                totalRubies += 100;
+                
+                const result = getDrawResult();
+                const resultWithStack = { ...result, stack: pityStack };
+                currentPullResults.push(resultWithStack);
+                
+                if (result.type === 'pickup') {
+                    pickupCount++;
+                    pityStack = 0;
+                    isGuaranteedPickup = false;
+                } else if (result.type === 'special' || result.type === 'legendary') {
+                    if (result.type === 'special') specialCount++;
+                    if (result.type === 'legendary') legendaryCount++;
+                    
+                    isGuaranteedPickup = true;
+                    if (pityStack < 100) {
+                        pityStack = 100;
+                    }
+                }
+            }
+            displayCurrentResults(currentPullResults);
+            addResultsToHistory(currentPullResults);
+            updateUI();
+        }
+        
+        /**
+         * 현재 스택과 상태에 따라 1회 뽑기 결과를 반환하는 핵심 로직 함수
+         * @returns {{name: string, type: string}} 뽑기 결과 객체
+         */
+        function getDrawResult() {
+            const rand = Math.random(); 
+
+            if (pityStack === 200) {
+                return { name: `★${PICKUP_CHAR}★`, type: 'pickup' };
+            }
+
+            if (pityStack === 100 && !isGuaranteedPickup) {
+                if (rand < 0.50) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
+                if (rand < 0.70) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' }; 
+                return { name: getRandomChar(NORMAL_LEGENDARY), type: 'legendary' };
+            }
+
+            if (isGuaranteedPickup) {
+                 if (rand < 0.01) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
+            } 
+            else {
+                if (rand < 0.005) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' };
+                if (rand < 0.007) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' };
+                if (rand < 0.010) return { name: getRandomChar(NORMAL_LEGENDARY), type: 'legendary' };
+            }
+
+            return { name: "쫄", type: 'common' };
+        }
+
+        /**
+         * 시뮬레이터의 모든 상태를 초기화하는 함수
+         */
+        function resetSimulator() {
+            pityStack = 0;
+            isGuaranteedPickup = false;
+            totalRubies = 0;
+            pickupCount = 0;
+            specialCount = 0;
+            legendaryCount = 0;
+            currentLegendaryIndex = -1;
+
+            currentResultsDiv.innerHTML = '';
+            historyDiv.innerHTML = '';
+
+            stopAutoDraw();
+
+            targetLevel = 0;
+            targetDisplay.textContent = TARGET_LABELS[targetLevel];
+
+            updateUI();
+        }
+        
+        function getRandomChar(charArray) {
+            return charArray[Math.floor(Math.random() * charArray.length)];
+        }
+
+        /**
+         * 사용자가 입력한 이름으로 픽업 캐릭터 이름을 설정하는 함수
+         */
+        function setPickupName() {
+            const newName = pickupNameInput.value.trim(); // 앞뒤 공백 제거
+            if (newName) { // 입력된 이름이 있을 경우에만 변경
+                PICKUP_CHAR = newName;
+                pickupMainDisplay.textContent = PICKUP_CHAR;
+                pickupNameInput.value = ''; // 입력 필드 비우기
+            }
+        }
+
+        /**
+         * 지정된 요소에 'updated' 애니메이션 클래스를 추가하고, 끝나면 제거하는 함수
+         * @param {HTMLElement} element 애니메이션을 적용할 DOM 요소
+         */
+        function triggerAnimation(element) {
+            // [수정] 애니메이션을 강제로 다시 시작하도록 변경
+            // 1. 먼저 클래스를 제거하고
+            element.classList.remove('updated');
+            // 2. 브라우저가 변경을 인지하도록 강제 리플로우(reflow)를 실행한 뒤
+            void element.offsetWidth;
+            // 3. 다시 클래스를 추가하여 애니메이션을 처음부터 재생합니다.
+            element.classList.add('updated');
+        }
+
+         /**
+         * 뽑기 내역에서 이전/다음 전설 등급으로 스크롤을 이동시키는 함수
+         * @param {'prev' | 'next'} direction 이동할 방향
+         */
+        function navigateLegendary(direction) {
+            const legendaryItems = historyDiv.querySelectorAll('.pickup, .special, .legendary');
+            if (legendaryItems.length === 0) return; // 전설 등급이 없으면 아무것도 안 함
+
+            // 이전에 강조된 항목이 있었다면 강조 효과 제거
+            const currentHighlighted = historyDiv.querySelector('.highlight');
+            if (currentHighlighted) {
+                currentHighlighted.classList.remove('highlight');
+            }
+
+            if (direction === 'next') {
+                currentLegendaryIndex = (currentLegendaryIndex + 1) % legendaryItems.length;
+            } else { // 'prev'
+                currentLegendaryIndex = (currentLegendaryIndex - 1 + legendaryItems.length) % legendaryItems.length;
+            }
+
+            const targetItem = legendaryItems[currentLegendaryIndex];
+            targetItem.classList.add('highlight');
+            targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        /**
+         * 자동 뽑기 상태에 따라 시작 또는 정지 함수를 호출하는 함수
+         */
+        function toggleAutoDraw() {
+            if (isAutoDrawing) {
+                stopAutoDraw();
+            } else {
+                startAutoDraw();
+            }
+        }
+
+        /**
+         * 자동 뽑기를 중지하고 컨트롤들을 원래 상태로 되돌리는 함수
+         */
+        function stopAutoDraw() {
+            if (!isAutoDrawing) return;
+
+            clearInterval(autoDrawInterval);
+            isAutoDrawing = false;
+            toggleControls(true); // 다른 버튼들 다시 활성화
+
+            // 버튼을 다시 '될 때 까지 뽑기' 상태로 변경
+            autoDrawBtn.textContent = "될 때 까지 뽑기";
+            autoDrawBtn.classList.remove('stop-button');
+        }
+
+        /**
+         * 뽑기 목표 레벨을 변경하고 화면에 표시하는 함수
+         * @param {Event} event 클릭 이벤트 객체
+         */
+        function changeTarget(event) {
+            if (isAutoDrawing) return; // 자동 뽑기 중에는 변경 불가
+
+            if (event.target.id === 'prev-target-btn') {
+                targetLevel = Math.max(0, targetLevel - 1);
+            } else {
+                targetLevel = Math.min(TARGET_LABELS.length - 1, targetLevel + 1);
+            }
+            targetDisplay.textContent = TARGET_LABELS[targetLevel];
+        }
+
+         /**
+         * '될 때 까지 뽑기'를 시작하는 함수
+         */
+        function startAutoDraw() {
+            const targetPickupCount = targetLevel + 1;
+            if (pickupCount >= targetPickupCount) {
+                alert("이미 목표를 달성했습니다!");
+                return;
+            }
+
+            isAutoDrawing = true;
+            toggleControls(false); // 다른 버튼들은 비활성화
+
+            // '될 때 까지 뽑기' 버튼을 '정지' 버튼으로 변경
+            autoDrawBtn.textContent = "정지";
+            autoDrawBtn.classList.add('stop-button');
+
+            autoDrawInterval = setInterval(() => {
+                performDraw(10);
+                if (pickupCount >= targetPickupCount) {
+                    stopAutoDraw(); // 목표 달성 시 정지 함수 호출
+                }
+            }, 200);
+        }
+
+        /**
+         * 컨트롤 버튼들의 활성/비활성 상태를 변경하는 함수
+         */
+        function toggleControls(enabled) {
+            draw1Btn.disabled = !enabled;
+            draw10Btn.disabled = !enabled;
+            // '될 때 까지 뽑기/정지' 버튼은 항상 활성화 상태로 둡니다.
+            // autoDrawBtn.disabled = !enabled; 
+            resetBtn.disabled = !enabled;
+            prevTargetBtn.disabled = !enabled;
+            nextTargetBtn.disabled = !enabled;
+            setNameBtn.disabled = !enabled;
+        }
+
+        /**
+         * 최근 뽑기 결과를 상단에 표시
+         */
+        function displayCurrentResults(results) {
+            currentResultsDiv.innerHTML = ''; // 기존 결과 지우기
+            const fragment = document.createDocumentFragment();
+            results.forEach(result => {
+                const span = document.createElement('span');
+                span.textContent = result.name;
+                span.className = result.type; // CSS 클래스 적용
+                fragment.appendChild(span);
+            });
+            currentResultsDiv.appendChild(fragment);
+        }
+
+        /**
+         * 뽑기 결과를 하단 내역에 추가 (오류 수정 최종 버전)
+         */
+        function addResultsToHistory(results) {
+            const fragment = document.createDocumentFragment();
+            
+            // 결과를 순서대로 fragment에 추가합니다 (1, 2, 3... 순)
+            results.forEach(result => {
+                const p = document.createElement('p');
+                if (result.stack == 100) {
+                    p.textContent = `(반천장) ${result.name}`;
+                }
+                else if (result.stack == 200) {
+                    p.textContent = `(천장) ${result.name}`;
+                } else {
+                    p.textContent = `(${result.stack}스택) ${result.name}`;
+                }
+                p.classList.add(result.type);
+                fragment.appendChild(p);
+            });
+            
+            // 완성된 fragment를 내역 div의 맨 끝에 추가합니다.
+            historyDiv.appendChild(fragment);
+            
+            // 새 내역이 보이도록 스크롤을 항상 맨 아래로 이동시킵니다.
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+        
+        function updateUI() {
+            pityStackEl.textContent = pityStack;
+            
+            if (isGuaranteedPickup) {
+                pityStatusEl.textContent = '픽업 확정';
+                pityStatusEl.style.color = '#f1c40f'; // 노란색으로 강조
+            } else {
+                pityStatusEl.textContent = '기본';
+                 pityStatusEl.style.color = '#ffffff';
+            }
+
+            // [수정] 값이 변경될 때만 애니메이션을 실행하는 헬퍼 함수
+            const updateCounter = (element, newValue) => {
+                // toLocaleString()을 적용한 새 값을 기준으로 비교
+                const formattedNewValue = newValue.toLocaleString();
+                if (element.textContent !== formattedNewValue) {
+                    element.textContent = formattedNewValue;
+                    triggerAnimation(element); // 값이 변경되었을 때만 애니메이션 실행
+                }
+            };
+
+            // 헬퍼 함수를 사용하여 각 카운터 업데이트
+            updateCounter(pickupCountEl, pickupCount);
+            updateCounter(specialCountEl, specialCount);
+            updateCounter(legendaryCountEl, legendaryCount);
+            updateCounter(totalRubiesEl, totalRubies);
+            
+            if (pickupCount == 1) {
+                rubyStatsEl.textContent = `${PICKUP_CHAR} 명함 만드는 데 사용한 루비: ${totalRubies.toLocaleString()}개`;
+            }
+            else if (pickupCount > 1) {
+                 rubyStatsEl.textContent = `${PICKUP_CHAR} ${pickupCount - 1}초 만드는 데 사용한 루비: ${totalRubies.toLocaleString()}개`;
+            } else {
+                 rubyStatsEl.textContent = `아직 ${PICKUP_CHAR}를 획득하지 못했습니다.`;
+            }
+        }
+    </script>
+</body>
+</html>
