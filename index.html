@@ -376,7 +376,7 @@
         </div>
         <div class="auto-draw-controls">
             <button id="prev-target-btn">◀</button>
-            <span id="target-display">명함</span>
+            <span id="target-display">6초</span>
             <button id="next-target-btn">▶</button>
             <button id="auto-draw-btn">될 때까지 자동 뽑기</button>
         </div>
@@ -427,7 +427,7 @@
         let legendaryCount = 0;
 
         // --- 자동 뽑기 변수 ---
-        let targetLevel = 0; // 0: 명함, 1: 1초, ..., 6: 6초
+        let targetLevel = 6; // 0: 명함, 1: 1초, ..., 6: 6초
         let isAutoDrawing = false;
         let autoDrawInterval = null;
         const TARGET_LABELS = ["명함", "1초", "2초", "3초", "4초", "5초", "6초"];
@@ -566,8 +566,8 @@
 
             stopAutoDraw();
 
-            targetLevel = 0;
-            targetDisplay.textContent = TARGET_LABELS[targetLevel];
+            // targetLevel = 0;
+            // targetDisplay.textContent = TARGET_LABELS[targetLevel];
 
             updateUI();
         }
