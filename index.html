@@ -166,23 +166,26 @@
         }
 
         /* 텍스트 효과 */
-        .common { color: #b0b8c4; }
-        .pickup {
+        #total-rubies-stats { color: rgb(199, 88, 88)}
+        .star2, #star2-stats { color: #b0b8c4; }
+        .rare, #rare-stats { color: #857cd1; } /* 보라색 */
+        .star3, #star3-stats { color: #5cdb71; } /* 연두색 계열 */
+        .pickup, #pickup-stats {
             font-weight: bold;
             color: yellow;
             text-shadow: 
                 -1px -1px 0 #ff0000, 1px -1px 0 #ff0000,
                 -1px 1px 0 #ff0000, 1px 1px 0 #ff0000,
-                0 0 8px yellow;
+                0 0 12px yellow;
         }
-        .special {
+        .special, #special-stats {
             font-weight: bold;
             color: yellow;
             text-shadow: 
-                -1px -1px 0 #ff0000, 1px -1px 0 #ff0000,
-                -1px 1px 0 #ff0000, 1px 1px 0 #ff0000;
+                -1px -1px 0 #eb0909, 1px -1px 0 #eb0909,
+                -1px 1px 0 #eb0909, 1px 1px 0 #eb0909;
         }
-        .legendary {
+        .legendary, #legendary-stats {
             font-weight: bold;
             color: yellow;
              text-shadow: 
@@ -282,6 +285,20 @@
             margin-top: 10px;
         }
 
+        .common-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #40444b;
+            border-radius: 5px;
+        }
+
+        .common-stats-grid .label { font-size: 0.8em; }
+        .common-stats-grid .value { font-size: 1.2em; }
+
         /* =================================== */
         /* [추가] 모바일 반응형 스타일 (700px 이하) */
         /* =================================== */
@@ -361,7 +378,7 @@
                 </div>
                 <div>
                     <span class="label">뽑기 상태</span>
-                    <div id="pity-status" class="value" style="font-size: 1.2em;">기본</div>
+                    <div id="pity-status" class="value" style="font-size: 1.2em;">기본 소환</div>
                 </div>
             </div>
         </div>
@@ -385,20 +402,34 @@
             <h3>뽑기 통계</h3>
             <div class="stats-grid">
                  <div>
-                    <span class="label">픽업 획득</span>
+                    <span class="label" id="pickup-stats">픽업 획득</span>
                     <div id="pickup-count" class="value">0</div>
                 </div>
                 <div>
-                    <span class="label">찐스 획득</span>
+                    <span class="label" id="special-stats">찐스 획득</span>
                     <div id="special-count" class="value">0</div>
                 </div>
                  <div>
-                    <span class="label">짭스 획득</span>
+                    <span class="label" id="legendary-stats">짭스 획득</span>
                     <div id="legendary-count" class="value">0</div>
                 </div>
             </div>
+            <div class="common-stats-grid">
+                <div>
+                    <span class="label" id="rare-stats">희귀 획득</span>
+                    <div id="rare-count" class="value">0</div>
+                </div>
+                <div>
+                    <span class="label" id="star3-stats">3성 획득</span>
+                    <div id="star3-count" class="value">0</div>
+                </div>
+                <div>
+                    <span class="label" id="star2-stats">2성 획득</span>
+                    <div id="star2-count" class="value">0</div>
+                </div>
+            </div>
              <div style="margin-top: 15px; background-color: #40444b; padding: 10px; border-radius: 5px;">
-                <span class="label">총 사용 루비</span>
+                <span class="label" id="total-rubies-stats">총 사용 루비</span>
                 <div id="total-rubies" class="value">0</div>
                 <div id="ruby-stats" style="font-size: 0.9em; margin-top: 5px; color: #99aab5;">-</div>
             </div>
@@ -425,6 +456,9 @@
         let pickupCount = 0;
         let specialCount = 0;
         let legendaryCount = 0;
+        let rareCount = 0;
+        let star3Count = 0;
+        let star2Count = 0;
 
         // --- 자동 뽑기 변수 ---
         let targetLevel = 6; // 0: 명함, 1: 1초, ..., 6: 6초
@@ -467,6 +501,10 @@
 
         const navUpBtn = document.getElementById('nav-up-btn');
         const navDownBtn = document.getElementById('nav-down-btn');
+
+        const rareCountEl = document.getElementById('rare-count');
+        const star3CountEl = document.getElementById('star3-count');
+        const star2CountEl = document.getElementById('star2-count');
         
         // --- 이벤트 리스너 ---
         draw1Btn.addEventListener('click', () => performDraw(1));
@@ -513,6 +551,11 @@
                     if (pityStack < 100) {
                         pityStack = 100;
                     }
+                } else {
+                    // [추가] 희귀, 3성, 2성 카운터를 올리는 부분
+                    if (result.type === 'rare') rareCount++;
+                    else if (result.type === 'star3') star3Count++;
+                    else if (result.type === 'star2') star2Count++;
                 }
             }
             displayCurrentResults(currentPullResults);
@@ -521,32 +564,54 @@
         }
         
         /**
-         * 현재 스택과 상태에 따라 1회 뽑기 결과를 반환하는 핵심 로직 함수
+         * 현재 스택과 상태에 따라 1회 뽑기 결과를 반환하는 핵심 로직 함수 (최종 수정본)
          * @returns {{name: string, type: string}} 뽑기 결과 객체
          */
         function getDrawResult() {
+            // [핵심] 모든 확률 판정에 사용할 단 하나의 난수를 생성합니다.
             const rand = Math.random(); 
 
+            // --- 1. 최우선 순위: 확정 천장 시스템 ---
             if (pityStack === 200) {
                 return { name: `★${PICKUP_CHAR}★`, type: 'pickup' };
             }
 
             if (pityStack === 100 && !isGuaranteedPickup) {
-                if (rand < 0.50) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
-                if (rand < 0.70) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' }; 
+                // 반천장에서는 별도의 난수 로직을 사용하는 것이 명확합니다.
+                const pityRand = Math.random();
+                if (pityRand < 0.50) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
+                if (pityRand < 0.70) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' }; 
                 return { name: getRandomChar(NORMAL_LEGENDARY), type: 'legendary' };
             }
 
-            if (isGuaranteedPickup) {
-                 if (rand < 0.01) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
-            } 
-            else {
-                if (rand < 0.005) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' };
-                if (rand < 0.007) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' };
-                if (rand < 0.010) return { name: getRandomChar(NORMAL_LEGENDARY), type: 'legendary' };
+            // --- 2. 일반/픽업 확정 상태의 확률 계산 ---
+            // '전설'이 나올 확률은 총 1% (0.01)입니다.
+            if (rand < 0.01) { 
+                // 픽업 확정 상태일 경우
+                if (isGuaranteedPickup) {
+                    return { name: `★${PICKUP_CHAR}★`, type: 'pickup' }; 
+                } 
+                // 기본 상태일 경우 (전설 1% 내에서 다시 확률 분배)
+                else {
+                    const legendRand = rand * 100; // 0.0 ~ 0.99... 사이의 숫자로 변환
+                    if (legendRand < 0.5) return { name: `★${PICKUP_CHAR}★`, type: 'pickup' };     // 0.5%
+                    if (legendRand < 0.7) return { name: getRandomChar(SPECIAL_LEGENDARY), type: 'special' }; // 0.2%
+                    return { name: getRandomChar(NORMAL_LEGENDARY), type: 'legendary' }; // 0.3%
+                }
             }
+            // --- 3. '쫄'이 나올 확률 (나머지 99%) ---
+            else {
+                // 0.01 ~ 0.99... 범위의 rand 값을 0.0 ~ 0.98... 범위로 정규화하여 쫄 확률 계산
+                const commonRand = (rand - 0.01) / 0.99;
 
-            return { name: "쫄", type: 'common' };
+                if (commonRand < 0.14) { // 99% * 14%
+                    return { name: "희귀", type: 'rare' };
+                } else if (commonRand < 0.54) { // 99% * 40%
+                    return { name: "3성", type: 'star3' };
+                } else { // 나머지 99% * 45%
+                    return { name: "2성", type: 'star2' };
+                }
+            }
         }
 
         /**
@@ -559,6 +624,9 @@
             pickupCount = 0;
             specialCount = 0;
             legendaryCount = 0;
+            rareCount = 0;
+            star3Count = 0;
+            star2Count = 0;
             currentLegendaryIndex = -1;
 
             currentResultsDiv.innerHTML = '';
@@ -757,7 +825,7 @@
                 pityStatusEl.textContent = '픽업 확정';
                 pityStatusEl.style.color = '#f1c40f'; // 노란색으로 강조
             } else {
-                pityStatusEl.textContent = '기본';
+                pityStatusEl.textContent = '기본 소환';
                  pityStatusEl.style.color = '#ffffff';
             }
 
@@ -775,6 +843,9 @@
             updateCounter(pickupCountEl, pickupCount);
             updateCounter(specialCountEl, specialCount);
             updateCounter(legendaryCountEl, legendaryCount);
+            updateCounter(rareCountEl, rareCount);
+            updateCounter(star3CountEl, star3Count);
+            updateCounter(star2CountEl, star2Count);
             updateCounter(totalRubiesEl, totalRubies);
             
             if (pickupCount == 1) {
